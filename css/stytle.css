@@ -1,0 +1,389 @@
+/* 全局默认样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #f5f5f5;
+    padding-top: 140px;
+    transition: padding-top 0.3s ease;
+}
+
+/* 顶部栏核心样式 */
+.top-nav {
+    background-color: #5e5e5e;
+    color: white;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Open Sans', sans-serif;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+    min-height: 120px;
+    transition: transform 0.3s ease, min-height 0.3s ease, padding 0.3s ease;
+}
+
+/* 顶部栏隐藏类 */
+.top-nav.hide {
+    transform: translateY(-100%);
+}
+
+/* logo和文字的包裹容器（电脑端无影响，手机端用于定位） */
+.logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* 电脑端logo和文字间距 */
+    position: relative; /* 手机端定位基准 */
+}
+
+/* 顶部栏logo（电脑端样式） */
+.top-logo {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    z-index: 1; /* 电脑端层级默认 */
+}
+
+/* 文字样式（电脑端） */
+.logo-text h1 {
+    font-family: 'FangSong', '仿宋', serif;
+    font-size: 1.8rem;
+    margin: 0;
+    z-index: 2; /* 电脑端层级默认 */
+}
+
+/* 导航列表样式 */
+.nav-list {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    gap: 2.5rem;
+}
+
+.nav-item {
+    cursor: pointer;
+}
+
+.nav-item a,
+.dropdown-trigger {
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.1rem;
+    color: white;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.nav-item a:hover,
+.dropdown-trigger:hover {
+    color: #f7b733;
+    text-decoration: underline;
+}
+
+/* 下拉菜单样式 */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-trigger {
+    list-style: none;
+    cursor: pointer;
+    padding: 0.5rem 0;
+    display: inline-block;
+}
+
+.dropdown-trigger::-webkit-details-marker {
+    display: none;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #5e5e5e;
+    border-radius: 4px;
+    list-style: none;
+    margin: 0;
+    padding: 1rem;
+    min-width: 160px;
+    flex-direction: column;
+    gap: 0.8rem;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-item a {
+    display: block;
+    padding: 0.3rem 0;
+    font-size: 1.1rem;
+}
+
+/* 文章容器样式 */
+.article {
+    margin-bottom: 2.5rem;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.content {
+    background-color: white;
+    padding: 2.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: visible;
+}
+
+h2 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 2;
+}
+
+p {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 2;
+}
+
+/* 文章图片样式 */
+.article-image {
+    position: absolute;
+    opacity: 0.15;
+    z-index: 1;
+    max-width: 200px;
+    height: auto;
+    object-fit: contain;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* 文章辅助样式 */
+.article-author,
+.article-date,
+.article-tags,
+.article-id {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+
+a {
+    color: #ffa58c;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* 移动端专属间距 */
+.mobile-only-spacing {
+    display: none;
+}
+
+/* -------------- 移动端适配（768px以下）-------------- */
+@media (max-width: 768px) {
+    /* 适配放大logo后的顶部栏高度 */
+    body {
+        padding-top: 170px;
+    }
+
+    .top-nav {
+        flex-direction: column;
+        padding: 1rem 1rem;
+        min-height: 150px; /* 略微增高，容纳放大的logo */
+        gap: 0.5rem;
+    }
+
+    /* 核心修改：logo和文字重叠布局 */
+    .logo-wrapper {
+        gap: 0; /* 取消间距，让文字和logo重叠 */
+        justify-content: center; /* 整体居中 */
+        width: 100%; /* 占满顶部栏宽度 */
+        height: 100px; /* 固定高度，确保logo定位稳定 */
+    }
+
+    /* 手机端logo：放大+往下调+淡化 */
+    .top-logo {
+        position: absolute;
+        width: 110px; /* 放大（原80px→110px） */
+        height: 110px;
+        opacity: 0.3; /* 保持淡化效果 */
+        left: 50%;
+        top: 70%; /* 往下调（原50%→70%，数值越大越靠下） */
+        transform: translate(-50%, -50%); /* 水平居中+垂直微调 */
+        z-index: 1; /* 低于文字层级 */
+    }
+
+    /* 手机端文字：覆盖在logo上+居中+微调位置 */
+    .logo-text h1 {
+        position: relative;
+        font-size: 1.7rem; /* 文字略微放大，配合logo */
+        z-index: 2; /* 高于logo层级 */
+        text-shadow: 0 0 4px rgba(0,0,0,0.4); /* 增强阴影，提升可读性 */
+        top: 5px; /* 文字轻微往下调，与logo对齐更协调 */
+    }
+
+    /* 导航列表样式调整 */
+    .nav-list {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1.2rem;
+        margin-bottom: 0.5rem;
+        width: 100%;
+    }
+
+    .dropdown-menu {
+        left: 0;
+        transform: none;
+        width: 100%;
+        max-width: 200px;
+    }
+
+    /* 显示移动端专属间距 */
+    .mobile-only-spacing {
+        display: block;
+        height: 30px;
+    }
+
+    /* 文章容器内边距适配 */
+    .content {
+        padding: 1.8rem 1.2rem;
+    }
+
+    /* 移动端文章图片优化 */
+    .article-image {
+        max-width: 150px;
+        right: auto;
+        left: 50%;
+        top: 20px;
+        transform: translateX(-50%);
+        opacity: 0.12;
+    }
+
+    /* 标题和文字尺寸适配 */
+    h2 {
+        font-size: 1.6rem;
+        text-align: center;
+        margin-bottom: 1.2rem;
+    }
+
+    p {
+        font-size: 1.1rem;
+        line-height: 1.7;
+    }
+}
+
+/* 小屏手机适配（375px以下） */
+@media (max-width: 375px) {
+    body {
+        padding-top: 150px;
+    }
+
+    .top-nav {
+        min-height: 130px;
+    }
+
+    /* 小屏手机logo适当缩小，但仍比之前大 */
+    .top-logo {
+        width: 90px; /* 原60px→90px */
+        height: 90px;
+        top: 75%; /* 继续往下调，适配小屏布局 */
+    }
+
+    .logo-text h1 {
+        font-size: 1.5rem;
+        top: 3px;
+    }
+
+    .article-image {
+        max-width: 120px;
+    }
+
+    h2 {
+        font-size: 1.4rem;
+    }
+}
+/* 底部栏核心样式 */
+.footer {
+    background-color: #5e5e5e; /* 与顶部栏同色系 */
+    color: #fff;
+    padding: 2rem 0;
+    margin-top: 3rem;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    text-align: center;
+}
+
+/* 底部导航链接 */
+.footer-nav {
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+}
+
+.footer-nav a {
+    color: #f7b733; /* 强调色，与顶部导航hover效果呼应 */
+    text-decoration: none;
+    margin: 0 0.8rem;
+}
+
+.footer-nav a:hover {
+    text-decoration: underline;
+}
+
+.footer-nav span {
+    color: #ccc;
+}
+
+/* 版权信息 */
+.footer-info p {
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+    color: #eee;
+    line-height: 1.6;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .footer {
+        padding: 1.5rem 0;
+        margin-top: 2rem;
+    }
+    
+    .footer-nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem 1rem;
+    }
+    
+    .footer-nav span {
+        display: none; /* 移动端隐藏分隔符 */
+    }
+    
+    .footer-info p {
+        font-size: 0.8rem;
+    }
+}

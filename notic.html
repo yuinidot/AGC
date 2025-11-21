@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta name="keywords" content="Anti-Gay Church, 反Gay教, 反对GAY神, 自由联盟">
+    <meta name="author" content="Anti-Gay Church">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-Gay Church - 反Gay教 - 公告</title>
+    <meta name="description" content='Anti-GayChurch公告页面，展示最新更新内容、计划及动态通知，非真反GAY'>
+    <meta name="robots" content="index, follow">
+    <link rel="stylesheet" href="css/stytle.css">
+    <style>
+        /* 公告核心样式（复用基础样式，补充公告特性） */
+        .notice-container {
+            display: none; /* 初始隐藏，加载完成后显示 */
+            margin-bottom: 2.5rem;
+        }
+        .current-notice {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .notice-meta {
+            color: #666;
+            font-size: 0.9em;
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+        .history-notices {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px dashed #eee;
+        }
+        .history-item {
+            padding: 10px 15px;
+            border: 1px solid #eee;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .history-item:hover {
+            background-color: #f5f5f5;
+            border-color: #ddd;
+        }
+        .history-item.active {
+            border-left: 3px solid #f00;
+            background-color: #fff8f8;
+        }
+        /* 旧公告链接样式（与整体风格统一） */
+        .old-notice-link {
+            display: block;
+            text-align: center;
+            margin: 20px auto;
+            padding: 10px 0;
+            color: #ffa58c;
+            font-weight: bold;
+            text-decoration: none;
+            max-width: 300px;
+        }
+        .old-notice-link:hover {
+            text-decoration: underline;
+            background-color: #fff8f8;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="mobile-only-spacing"></div>
+
+    <!-- 1. 更新内容公告容器 -->
+    <div class="article notice-container" data-notice-type="update_content">
+        <div class="container">
+            <div class="content">
+                <h2 class="notice-title">更新内容</h2>
+                <img src="img/logo-1.png" alt="更新内容公告" class="article-image">
+                <div class="notice-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 更新计划公告容器 -->
+    <div class="article notice-container" data-notice-type="update_plan">
+        <div class="container">
+            <div class="content">
+                <h2 class="notice-title">更新计划</h2>
+                <img src="img/logo-1.png" alt="更新计划公告" class="article-image">
+                <div class="notice-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 管理公告容器 -->
+    <div class="article notice-container" data-notice-type="management">
+        <div class="container">
+            <div class="content">
+                <h2 class="notice-title">管理公告</h2>
+                <img src="img/logo-1.png" alt="管理公告" class="article-image">
+                <div class="notice-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. 动态公告容器（带历史回溯） -->
+    <div class="article notice-container" data-notice-type="dynamic_notice">
+        <div class="container">
+            <div class="content">
+                <h2 class="notice-title">动态公告</h2>
+                <!-- 当前公告展示区 -->
+                <div id="dynamic-current-notice" class="current-notice">
+                    <img src="img/logo-1.png" alt="动态公告" class="article-image">
+                    <p style="color: #f00;">加载中...</p>
+                </div>
+                <!-- 历史公告列表 -->
+                <div class="history-notices">
+                    <h3>历史公告</h3>
+                    <div id="dynamic-history-container">
+                        <p>加载历史公告中...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 常驻旧公告链接（所有公告容器之后） -->
+    <a href="notic-old.html" class="old-notice-link">查看所有旧公告 →</a>
+
+    <script type="module" src="js/js-loader-simple.js"></script>
+    <script>
+        /**
+         * 公告管理器：统一处理公告加载、分组、渲染逻辑
+         */
+        class NoticeManager {
+            constructor() {
+                // 公告文件配置
+                this.config = {
+                    folder: 'notices/',
+                    filePrefix: 'notic-',
+                    fileExt: '.json',
+                    maxLoadAttempts: 10 // 最大加载尝试次数
+                };
+                // 数据存储
+                this.allNotices = []; // 所有公告
+                this.noticesByType = {}; // 按类型分组的公告
+
+                // 初始化
+                this.init();
+            }
+
+            /**
+             * 初始化流程：加载公告 → 分组 → 渲染
+             */
+            async init() {
+                try {
+                    await this.loadAllNotices();
+                    this.groupNotices();
+                    this.renderAllNotices();
+                } catch (error) {
+                    console.error('公告加载失败:', error);
+                    this.showGlobalError('公告加载失败，请稍后重试');
+                }
+            }
+
+            /**
+             * 加载所有公告文件（按编号递增尝试）
+             */
+            async loadAllNotices() {
+                let currentId = 1;
+                let isLoadingSuccess = true;
+
+                while (isLoadingSuccess && currentId <= this.config.maxLoadAttempts) {
+                    const fileNum = String(currentId).padStart(4, '0');
+                    const filePath = `${this.config.folder}${this.config.filePrefix}${fileNum}${this.config.fileExt}`;
+
+                    try {
+                        const response = await fetch(filePath);
+                        if (!response.ok) throw new Error(`文件不存在`);
+
+                        const notice = await response.json();
+                        // 补充基础信息
+                        notice.id = currentId;
+                        notice.filePath = filePath;
+
+                        // 验证必要字段
+                        if (!notice.type) throw new Error(`公告${fileNum}缺少类型字段`);
+
+                        this.allNotices.push(notice);
+                        currentId++;
+                    } catch (error) {
+                        console.log(`加载${filePath}失败:`, error.message);
+                        isLoadingSuccess = false;
+                    }
+                }
+
+                if (this.allNotices.length === 0) {
+                    throw new Error('未找到任何公告数据');
+                }
+            }
+
+            /**
+             * 按公告类型分组，并按ID降序排序（最新在前）
+             */
+            groupNotices() {
+                this.allNotices.forEach(notice => {
+                    const type = notice.type;
+                    if (!this.noticesByType[type]) {
+                        this.noticesByType[type] = [];
+                    }
+                    this.noticesByType[type].push(notice);
+                });
+
+                // 每组内按ID降序（确保最新的在前面）
+                Object.keys(this.noticesByType).forEach(type => {
+                    this.noticesByType[type].sort((a, b) => b.id - a.id);
+                });
+            }
+
+            /**
+             * 渲染页面上所有公告容器
+             */
+            renderAllNotices() {
+                const containers = document.querySelectorAll('.notice-container');
+                containers.forEach(container => {
+                    const type = container.dataset.noticeType;
+                    const notices = this.noticesByType[type] || [];
+
+                    // 无对应公告时显示提示
+                    if (notices.length === 0) {
+                        this.renderEmptyNotice(container);
+                        return;
+                    }
+
+                    // 动态公告单独处理（带历史），其他类型显示最新一条
+                    if (type === 'dynamic_notice') {
+                        this.renderDynamicNotice(container, notices);
+                    } else {
+                        this.renderNormalNotice(container, notices[0]);
+                    }
+
+                    container.style.display = 'block';
+                });
+            }
+
+            /**
+             * 渲染普通公告（非动态类型）
+             * @param {HTMLElement} container 容器元素
+             * @param {Object} notice 公告数据
+             */
+            renderNormalNotice(container, notice) {
+                // 填充标题
+                const titleElem = container.querySelector('.notice-title');
+                titleElem.textContent = notice.title || titleElem.textContent;
+
+                // 填充内容
+                const contentElem = container.querySelector('.notice-content');
+                contentElem.innerHTML = `
+                    ${notice.version ? `<p style="color: #f00;">${notice.version}</p>` : ''}
+                    ${notice.content || '<p>暂无具体内容</p>'}
+                    ${notice.date ? `<div class="notice-meta">发布时间: ${notice.date}</div>` : ''}
+                `;
+
+                // 更新图片
+                const imgElem = container.querySelector('.article-image');
+                if (notice.image) {
+                    imgElem.src = notice.image;
+                    imgElem.alt = notice.title || '公告图片';
+                }
+            }
+
+            /**
+             * 渲染动态公告（带历史切换功能）
+             * @param {HTMLElement} container 容器元素
+             * @param {Array} notices 动态公告列表
+             */
+            renderDynamicNotice(container, notices) {
+                const currentContainer = container.querySelector('#dynamic-current-notice');
+                const historyContainer = container.querySelector('#dynamic-history-container');
+                const latestNotice = notices[0];
+
+                // 渲染最新公告
+                this.renderSingleDynamicNotice(currentContainer, latestNotice);
+
+                // 渲染历史公告（排除最新一条）
+                const historyNotices = notices.slice(1);
+                if (historyNotices.length === 0) {
+                    historyContainer.innerHTML = '<p>暂无历史公告</p>';
+                    return;
+                }
+
+                // 生成历史列表HTML
+                historyContainer.innerHTML = historyNotices.map(notice => `
+                    <div class="history-item" data-id="${notice.id}">
+                        <strong>${notice.title || `公告 ${notice.id}`}</strong>
+                        <div class="notice-meta">发布时间: ${notice.date || '未知'}</div>
+                    </div>
+                `).join('');
+
+                // 绑定历史项点击事件
+                historyContainer.querySelectorAll('.history-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const selectedId = parseInt(item.dataset.id);
+                        const selectedNotice = notices.find(n => n.id === selectedId);
+                        if (selectedNotice) {
+                            this.renderSingleDynamicNotice(currentContainer, selectedNotice);
+                            // 高亮选中项
+                            historyContainer.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
+                            item.classList.add('active');
+                        }
+                    });
+                });
+            }
+
+            /**
+             * 渲染单条动态公告（用于最新展示或历史切换）
+             * @param {HTMLElement} container 容器元素
+             * @param {Object} notice 公告数据
+             */
+            renderSingleDynamicNotice(container, notice) {
+                container.innerHTML = `
+                    <img src="${notice.image || 'img/logo-1.png'}" alt="${notice.title || '动态公告'}" class="article-image">
+                    <div class="notice-meta">
+                        公告编号: ${notice.id} | 发布时间: ${notice.date || '未知'}
+                    </div>
+                    ${notice.version ? `<p style="color: #f00;">${notice.version}</p>` : ''}
+                    <div class="notice-content">${notice.content || '<p>暂无具体内容</p>'}</div>
+                `;
+            }
+
+            /**
+             * 渲染空公告提示
+             * @param {HTMLElement} container 容器元素
+             */
+            renderEmptyNotice(container) {
+                container.innerHTML = `
+                    <div class="container">
+                        <div class="content">
+                            <h2 class="notice-title">${container.dataset.noticeType === 'management' ? '管理公告' : '暂无公告'}</h2>
+                            <img src="img/logo-1.png" alt="暂无公告" class="article-image">
+                            <p>暂无相关公告内容</p>
+                        </div>
+                    </div>
+                `;
+                container.style.display = 'block';
+            }
+
+            /**
+             * 全局错误提示（所有容器显示错误）
+             * @param {string} message 错误信息
+             */
+            showGlobalError(message) {
+                const containers = document.querySelectorAll('.notice-container');
+                containers.forEach(container => {
+                    container.innerHTML = `
+                        <div class="container">
+                            <div class="content">
+                                <p style="color: #f00; text-align: center; padding: 20px 0;">${message}</p>
+                            </div>
+                        </div>
+                    `;
+                    container.style.display = 'block';
+                });
+            }
+        }
+
+        // 页面加载完成后初始化公告管理器
+        document.addEventListener('DOMContentLoaded', () => {
+            new NoticeManager();
+        });
+    </script>
+</body>
+</html>

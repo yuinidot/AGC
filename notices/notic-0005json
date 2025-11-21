@@ -1,0 +1,8 @@
+{
+    "type": "update_plan",
+    "title": "更新计划",
+    "version": "未来规划",
+    "date": "2025-11-16",
+    "content": "<p style='color: #f00;'>将完善网站。</p><p>包括但不限于：</p><ul><li>添加用户注册功能</li><li>修复已知界面适配问题</li><li>优化公告加载速度</li><li>完善更多教会相关内容</li></ul>",
+    "image": "img/logo-1.png"
+}

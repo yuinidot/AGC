@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta name="keywords" content="Anti-Gay Church, 反Gay教, 反对GAY神, 自由联盟, 新闻动态">
+    <meta name="author" content="Anti-Gay Church">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-Gay Church - 反Gay教 - 新闻动态</title>
+    <meta name="description" content='Anti-GayChurch新闻动态，展示最新教会相关资讯，非真反GAY'>
+    <meta name="robots" content="index, follow">
+    <link rel="stylesheet" href="css/stytle.css">
+    <style>
+        /* 新闻页专属样式（统一全局风格） */
+        .news-page {
+            display: none; /* 初始隐藏，加载完成后显示 */
+        }
+        .news-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .news-item {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 18px;
+            transition: all 0.3s ease;
+            background-color: #fff;
+        }
+        .news-item:hover {
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            border-color: #ddd;
+        }
+        .news-header {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #eee;
+        }
+        .news-title {
+            font-size: 1.2em;
+            margin: 0 0 8px;
+            color: #333;
+        }
+        .news-meta {
+            color: #666;
+            font-size: 0.85em;
+            line-height: 1.5;
+        }
+        .news-summary {
+            margin: 10px 0;
+            color: #555;
+            line-height: 1.6;
+        }
+        .news-content {
+            margin: 12px 0;
+            color: #444;
+            line-height: 1.6;
+        }
+        /* 常驻旧新闻链接样式 */
+        .old-news-link {
+            display: block;
+            text-align: center;
+            margin: 25px auto 10px;
+            padding: 10px 0;
+            color: #ffa58c;
+            font-weight: bold;
+            text-decoration: none;
+            max-width: 300px;
+        }
+        .old-news-link:hover {
+            text-decoration: underline;
+            background-color: #fff8f8;
+            border-radius: 4px;
+        }
+        .empty-tip {
+            text-align: center;
+            color: #666;
+            padding: 40px 0;
+            border: 1px dashed #eee;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .error-tip {
+            text-align: center;
+            color: #f00;
+            padding: 40px 0;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="mobile-only-spacing"></div>
+
+    <!-- 新闻核心内容区 -->
+    <div class="article news-page">
+        <div class="container">
+            <div class="content">
+                <h2>新闻动态</h2>
+                
+                <!-- 最新新闻列表 -->
+                <div class="news-list" id="latestNewsList"></div>
+                
+                <!-- 常驻旧新闻链接（无论新闻数量多少都显示） -->
+                <a href="news-old.html" class="old-news-link">查看更多旧新闻 →</a>
+            </div>
+        </div>
+    </div>
+
+   <script type="module" src="js/js-loader-simple.js"></script>
+
+    <script>
+        /**
+         * 新闻管理器：加载最新3条新闻，常驻旧新闻链接
+         */
+        class NewsManager {
+            constructor() {
+                // 基础配置（集中管理）
+                this.config = {
+                    newsFolder: 'news/',        // 新闻文件夹路径
+                    filePrefix: 'news-',        // 文件名前缀
+                    fileExt: '.json',           // 文件后缀
+                    maxLoadAttempts: 20,        // 最大加载次数
+                    latestCount: 3              // 最新新闻显示数量
+                };
+
+                // 数据存储
+                this.allNews = []; // 所有加载的新闻
+
+                // 初始化流程
+                this.init();
+            }
+
+            /**
+             * 初始化：加载新闻 → 排序 → 渲染最新3条
+             */
+            async init() {
+                try {
+                    await this.loadAllNews();  // 加载所有新闻
+                    this.sortNews();           // 按ID/时间排序（最新在前）
+                    this.renderLatestNews();   // 渲染最新3条
+                } catch (error) {
+                    console.error('新闻加载失败:', error);
+                    this.renderError(error.message);
+                }
+            }
+
+            /**
+             * 加载news文件夹下所有新闻文件（按编号递增）
+             */
+            async loadAllNews() {
+                let currentId = 1;
+                let isLoadSuccess = true;
+
+                while (isLoadSuccess && currentId <= this.config.maxLoadAttempts) {
+                    const fileNum = String(currentId).padStart(4, '0');
+                    const filePath = `${this.config.newsFolder}${this.config.filePrefix}${fileNum}${this.config.fileExt}`;
+
+                    try {
+                        const response = await fetch(filePath);
+                        if (!response.ok) throw new Error(`文件不存在`);
+
+                        const news = await response.json();
+                        // 补充元数据
+                        news.id = currentId;          // 新闻编号（与文件名一致）
+                        news.filePath = filePath;     // 文件路径（调试用）
+
+                        // 验证必要字段
+                        if (!news.title) throw new Error(`新闻${fileNum}缺少标题`);
+
+                        this.allNews.push(news);
+                        currentId++;
+                    } catch (error) {
+                        console.log(`加载${filePath}失败:`, error.message);
+                        isLoadSuccess = false;
+                    }
+                }
+
+                // 无新闻数据时抛出错误
+                if (this.allNews.length === 0) {
+                    throw new Error('未找到任何新闻数据');
+                }
+            }
+
+            /**
+             * 新闻排序：优先按日期，无日期则按ID（最新在前）
+             */
+            sortNews() {
+                this.allNews.sort((a, b) => {
+                    // 优先按日期排序
+                    if (a.date && b.date) {
+                        return new Date(b.date) - new Date(a.date);
+                    }
+                    // 无日期时按ID排序（编号越大越新）
+                    return b.id - a.id;
+                });
+            }
+
+            /**
+             * 渲染最新3条新闻
+             */
+            renderLatestNews() {
+                const newsListElem = document.getElementById('latestNewsList');
+                const pageContainer = document.querySelector('.news-page');
+
+                // 截取最新3条
+                const latestNews = this.allNews.slice(0, this.config.latestCount);
+
+                // 生成新闻HTML
+                const newsHtml = latestNews.map(news => `
+                    <div class="news-item">
+                        <div class="news-header">
+                            <h3 class="news-title">${news.title}</h3>
+                            <div class="news-meta">
+                                编号：${news.id} | 发布时间：${news.date || '未知'}
+                            </div>
+                        </div>
+                        <!-- 新闻图片（存在则显示） -->
+                        ${news.image ? `<img src="${news.image}" alt="${news.title}" class="article-image" style="max-width:100%;margin:10px 0;">` : ''}
+                        <!-- 新闻摘要（存在则显示） -->
+                        ${news.summary ? `<div class="news-summary">${news.summary}</div>` : ''}
+                        <!-- 新闻详细内容（存在则显示） -->
+                        ${news.content ? `<div class="news-content">${news.content}</div>` : ''}
+                    </div>
+                `).join('');
+
+                // 渲染到页面
+                newsListElem.innerHTML = newsHtml;
+                pageContainer.style.display = 'block'; // 显示页面
+            }
+
+            /**
+             * 渲染错误提示
+             * @param {string} msg 错误信息
+             */
+            renderError(msg) {
+                const pageContainer = document.querySelector('.news-page');
+                pageContainer.innerHTML = `
+                    <div class="container">
+                        <div class="content">
+                            <h2>新闻动态</h2>
+                            <div class="error-tip">${msg}</div>
+                            <!-- 错误时仍显示旧新闻链接 -->
+                            <a href="news-old.html" class="old-news-link">查看更多旧新闻 →</a>
+                        </div>
+                    </div>
+                `;
+                pageContainer.style.display = 'block';
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            new NewsManager();
+        });
+    </script>
+</body>
+</html>
